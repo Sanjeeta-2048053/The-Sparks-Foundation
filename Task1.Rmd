@@ -1,0 +1,118 @@
+---
+title: "Task 1 - Prediction using Supervised ML"
+author: "SANJEETA CHAKRABORTY"
+date: "4/4/2021"
+output: html_document
+---
+
+# Predict the percentage of an student based on the no. of study hours.
+
+## Loading Dataset
+
+```{r}
+data <- read.csv("https://raw.githubusercontent.com/AdiPersonalWorks/Random/master/student_scores%20-%20student_scores.csv")
+head(data)
+```
+
+## Getting Insights from the data
+
+### Data Summary
+
+```{r}
+library(skimr)
+skim(data)
+```
+
+### Outlier detection
+
+```{r}
+par(mfrow=c(1, 2))  
+boxplot(data$Hours, main="Number of study hours", col='powderblue', sub=paste("Outlier rows: ", boxplot.stats(data$Hours)$out)) 
+boxplot(data$Scores, main="Score", col='mistyrose', sub=paste("Outlier rows: ", boxplot.stats(data$Scores)$out))
+```
+
+**There are no outliers present in the dataset.**
+
+## Checking the relationship between the variables
+
+```{r}
+library(ggplot2)
+ggplot(data, aes(x=Hours, y=Scores)) + geom_point(shape=6,color="red",size=3.5) + geom_text(label=rownames(data), nudge_x = 0.25, nudge_y = 0.25, check_overlap = TRUE) + ggtitle("Scatterplot")
+```
+
+**From the plot, We can infer that number of study hours and score is linearly related and it follows a positive uphill trend.**
+
+## Model Building
+
+### Splitting data into training and testing set
+
+```{r}
+set.seed(42)
+library(caTools)
+split<-sample.split(data,SplitRatio=0.7)
+```
+
+```{r}
+train<-subset(data,split==T)
+head(train)
+```
+
+```{r}
+test<-subset(data,split==F)
+head(test)
+```
+
+```{r}
+lmmodel<-lm(Scores~Hours, data = train)
+lmmodel
+```
+
+**Our regression equation is: y = -0.3332 + 10.2119X, that is Score = -0.3332 + 10.2119Number of Study hours.**
+
+**For every unit increase in number of study hours, the percentage scored by the student will increase by 10 units. The constant shows the percentage scored by the student when the number of study hours is zero. Generally it is considered the constant doesn't have any meaningful interpretation.**
+
+```{r}
+summary(lmmodel)
+```
+
+**The R-square value is 0.96. This implies 96% of the variation in response variable is explained by the predictor variable and the remaining 4% is due to error.**
+
+### Regression plot
+
+```{r}
+library(ggplot2)
+ggplot(data,
+       aes(x = Hours, y = Scores)) +
+  geom_point(shape=3,color="red",size=2.5) +          
+  geom_smooth(method = 'lm', formula = y~x, 
+              se = FALSE, size = 0.5,
+              aes(color = "lm1")) +                   
+  geom_smooth(method = 'lm') +           
+  scale_color_manual(name = "Regression", values = "Blue")
+```
+
+### Predicted values
+
+```{r}
+predictions <- data.frame(cbind(Actual = test$Scores, Predicted = predict(lmmodel, test)))
+predictions
+```
+
+
+```{r}
+hr = data.frame(Hours=c(9.25))
+pred = predict(lmmodel, hr)
+sprintf("Predicted Score when number of study hours is 9.25: %s", format(round(pred, 2), nsmall = 2))
+```
+
+**Therefore, a student who studies for 9.25 hrs will score 94.13%.**
+
+
+
+
+
+
+
+
+
+

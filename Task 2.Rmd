@@ -1,0 +1,99 @@
+---
+title: "Task 2 - Prediction using Unsupervised ML"
+author: "SANJEETA CHAKRABORTY"
+date: "10/04/2021"
+output: html_document
+---
+
+# From the given ‘Iris’ dataset, predict the optimum number of clusters and represent it visually.
+
+## Loading Dataset
+
+```{r}
+data <- read.csv("Iris.csv", header=TRUE)
+head(data)
+```
+
+## Loading Packages
+
+```{r}
+library(ClusterR)
+library(cluster)
+library(ggplot2)
+library(funModeling)
+```
+
+## Getting Insights from the data
+
+```{r}
+describe(data)
+```
+
+### Analysis of categorical variables
+
+```{r}
+freq(data)
+```
+
+### Analysis of Numerical Variables
+
+```{r}
+plot_num(data)
+```
+
+## Scatterplot
+
+```{r}
+ggplot(data, aes(PetalLengthCm, PetalWidthCm)) + geom_point(aes(col=Species), size=4)
+```
+
+```{r}
+ggplot(data, aes(SepalLengthCm, SepalWidthCm)) + geom_point(aes(col=Species), size=4)
+```
+
+**From the above plots we can observe that the species setosa can be easily clustered while versicolor and virginica are overlapping.**
+
+## Removing the label 
+
+```{r}
+df = data[,2:5]
+head(df)
+```
+
+## Fitting K-Means Model
+
+```{r}
+set.seed(45) 
+model <- kmeans(df, centers = 3, nstart = 20)
+model
+```
+
+## Comparing the clusters with the species
+
+```{r}
+cm <- table(model$cluster, data$Species)
+cm
+```
+
+**We can observe, the data belonging to the setosa species got grouped into cluster 3, versicolor into cluster 1, and virginica into cluster 2. The algorithm wrongly classified two data points belonging to versicolor and fourteen data points belonging to virginica.**
+
+## Clusterplot
+
+```{r}
+clusplot(data, model$cluster, color=T, shade=T, labels=0, lines=0)
+```
+
+## Optimum number of clusters
+
+```{r}
+k.max <- 10
+wss<- sapply(1:k.max,function(k){kmeans(data[,2:5],k,nstart = 20,iter.max = 20)$tot.withinss})
+wss
+```
+
+```{r}
+plot(1:k.max,wss, type= "b", xlab = "Number of clusters(k)", ylab = "Within cluster sum of squares")
+```
+
+**From the above plot we can say that the optimum value for k is 3.**
+
